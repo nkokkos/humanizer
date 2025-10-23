@@ -1,13 +1,13 @@
 # Humanizer
 
-Humanizer is a very simple CAPTCHA method. It has a localized YAML file with questions and answers which is used to validate that the user is an actual human. Any model that includes ActiveModel::Validations should work. Our aim is to be database and mapper agnostic, so if it doesn't work for you, open an issue. Humanizer works with Rails 3 and 4.
+Humanizer is a very simple CAPTCHA method. It has a localized YAML file with questions and answers which is used to validate that the user is an actual human. Any model that includes ActiveModel::Validations should work. Our aim is to be database and mapper agnostic, so if it doesn't work for you, open an issue. Humanizer works with Rails 3–7.
 
 ## Installation
 
 Add `humanizer` to your Gemfile:
 
 ```ruby
-gem 'humanizer'
+gem "humanizer"
 ```
 
 Bundle and run the generator in terminal:
@@ -46,6 +46,44 @@ end
 
 4. If you are using strong_parameters, remember to permit `:humanizer_answer` and `:humanizer_question_id`.
 
+## Usage without a model
+
+Alternatively, you many use the built in HumanizerHelper class instead of using your own model (useful for something like a contact form if you don't have a model/class for this). Behavior is the same including `Humanizer` on a model, but all setters are available as optional arguments when initializing a HumanizerHelper instance.
+
+1. Example initialization code(controller):
+
+```ruby
+@humanizer_helper = HumanizerHelper.new
+```
+
+2. Example rails form usage:
+
+```erb
+<%= label_tag :humanizer_answer, @humanizer_helper.humanizer_question %>
+<%= text_field_tag :humanizer_answer %>
+<%= hidden_field_tag :humanizer_question_id, @humanizer_helper.humanizer_question_id %>
+```
+
+3. Example response handling:
+
+```ruby
+humanizer_helper = HumanizerHelper.new(humanizer_answer: params[:humanizer_answer], humanizer_question_id: params[:humanizer_question_id])
+if humanizer_helper.humanizer_correct_answer?
+  do_stuff
+end
+```
+
+## Testing
+
+A HumanizerHelper instance provides an additional `get_correct_humanizer_answer` method to make testing easier. Example:
+
+```ruby
+  question_id = find('#humanizer_question_id', visible: false).value #gets humanizer question id from example form above
+  humanizer_helper = HumanizerHelper.new(humanizer_question_id: question_id)
+  fill_in 'humanizer_answer', with: humanizer_helper.get_correct_humanizer_answer #fills in answer field from example above with the correct answer
+```
+
+
 ## Configuration
 
 Default translations can be found in config/locales/
@@ -60,7 +98,7 @@ You can just have a simple attribute on your model and use it to bypass the vali
 
 ```ruby
 attr_accessor :bypass_humanizer
-require_human_on :create, :unless => :bypass_humanizer
+require_human_on :create, unless: :bypass_humanizer
 ```
 
 Now when bypass_humanizer is true, validation will be skipped.
@@ -74,11 +112,6 @@ To make sure the current question doesn't get asked again, you can pass the curr
 ```ruby
 @user.change_humanizer_question(params[:user][:humanizer_question_id])
 ```
-
-## Live sites
-
-* [ArcticStartup.com](http://arcticstartup.com/) - sign up form
-* [Paspartout](http://paspartout.com/) - sign up form
 
 ## License
 
@@ -102,6 +135,7 @@ Humanizer is licensed under the MIT License, for more details see the LICENSE fi
 * [seogrady](https://github.com/seogrady)
 * [yairgo](https://github.com/yairgo)
 * [woto](https://github.com/woto)
+* [Calvin Delamere](https://github.com/elbartostrikesagain)
 
 ## CI Build Status
 
